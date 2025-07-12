@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
 
 namespace DotNetCIExample.Api.Controllers
 {
@@ -11,11 +12,9 @@ namespace DotNetCIExample.Api.Controllers
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController()
         {
-            _logger = logger;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -24,10 +23,17 @@ namespace DotNetCIExample.Api.Controllers
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+                TemperatureC = GetSecureRandomInt(-20, 55),
+                Summary = Summaries[GetSecureRandomInt(0, Summaries.Length)]
             })
             .ToArray();
         }
+
+        private static int GetSecureRandomInt(int minValue, int maxValue)
+        {
+            return RandomNumberGenerator.GetInt32(minValue, maxValue);
+
+        }
+      
     }
 }

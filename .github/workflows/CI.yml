@@ -1,0 +1,40 @@
+name: ASP .NET Core CI
+
+on: 
+  push: 
+    branches: ["master"]
+  pull_request: 
+    branches: ["master"]
+
+env: 
+ DOTNET_VERSION: '8.0.x'
+ CONFIGURATION: 'Release'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with: 
+        dotnet-version: ${{env.DDOTNET_VERSION}}
+
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build with linting
+      run: dotnet build --configuration ${{ env.CONFIGURATION }} --warnaserror
+
+    - name: Run tests
+      run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --logger "trx;LogFileName=testresults.trx"
+
+
+
+
+
+    
+    

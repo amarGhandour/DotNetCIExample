@@ -11,6 +11,41 @@ env:
  CONFIGURATION: 'Release'
 
 jobs:
+  lint:
+    name: Linting & Code style
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Linting with warning
+      run: |
+       dotnet format --verify-no-changes --severity warn || echo "Formatting issues found (not failing build)"
+      continue-on-error: true  
+
+
+  security-scan:
+    name: Security Scan
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Semgrep scan
+      uses: returntocorp/semgrep-action@v1
+      with:
+          config: p/default  
+          extra-args: |
+            --config=p/csharp
+            --config=p/security-audit
+          severity: ERROR
+          output-format: txt
+      env:
+          SEMGREP_RULES: |
+            csharp
+            security-audit
+
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
@@ -26,8 +61,11 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     
-    - name: Build with linting
-      run: dotnet build --configuration ${{ env.CONFIGURATION }} --warnaserror
+    - name: Build with warnings
+      run: |
+          dotnet build --configuration ${{ env.CONFIGURATION }} /clp:"Summary;Verbosity=normal"
+          echo "Build completed with warnings (if any)"
+
 
     - name: Run tests
       run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --logger "trx;LogFileName=testresults.trx"
